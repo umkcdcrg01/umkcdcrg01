@@ -1,0 +1,100 @@
+git ( Git for ages 4 and up)  - linux.conf.au 2013
+	git init
+	git add .    ( add doesnt move the HEAD label)
+	Git commit -a -m “commit” 	# create a commit obj and move the HEAD and master label on it (Head → master,every time you commit, head and master will move forward  to your current progress )
+	git status
+	git diff
+	
+git branch:
+	git branch feature ( feature is the new branch name)
+	git checkout feature ( checkout means, next time you commit, the HEAD and feature label will be move forward for the feature, master stays)
+	# you can use: git branch -b new branch
+
+	branch feature → checkout feature → edit → test → add → commit → merge master (pull)→ test → checkout master → merge feature
+
+git branch merge:
+	git checkout master (HEAD Move back to on top of Master branch)
+	git merge feature ( since here, feature is head of master, do a “fast forward”, HEAD and Master label move to the position where feature is)
+	git merge master feature  ( merge master to feature)
+	git branch [-r]
+git check commit log:
+	git log
+	git log --graph --decorate --all 
+	
+git reset
+	git reset –hard (merge ID/commit ID from git log --graph --decorate –all )
+
+
+what if something go wrong:
+1. reset
+2. ….
+
+
+git ID:	  
+	Git commit ID = content + author + date + log + previous commit ID
+	Git Commit ID is a checksum of ( content + author + date + log + previous commit ID )
+	Every ID is unique, every commit is unique, commits never change, 
+
+git staging area:
+
+
+
+create local directory as a remote directory:
+	git clone –bare currentDirectory  RemoteDirectory
+		ex: git clone –bare currentGItDirecoty Remote(it can be a local folder) 
+		ex: shuai@conalab:~/Documents/git$ git clone --bare work remote 
+			Cloning into bare repository 'remote'... 
+			done. 
+
+		$ tree  Remote
+
+
+git remote :
+	clone, pull, fetch, push,  pull = fetch + merge
+	(Locally) branch newbranch → checkout newbranch → edit → test → add → commit → pull origin master → test → push origin master	
+
+
+	git clone  Remote yourlocaldirecotry   ( remote can be local or URL directory)
+	git remote -v
+		shuai@conalab:~/Documents/git/work$ git remote -v 
+			origin	/home/shuai/Documents/git/remote/ (fetch) 
+			origin	/home/shuai/Documents/git/remote/ (push)
+	
+After you do a remote clone, there are local tracking branches created for your default branch which is MASTER branch --- origin
+each local branch will have a tracking label for it
+
+	1. origin/branchName: you are referring to your local repo
+	2. origin branchName: you are referring the remote part of BranchName
+	
+	git push origin branchName  ( push to remote repo)
+	IF your remtoe repo has no branchName exists, it will send you a waring:
+		git push –set-upstream origin branchName  # will create the remote branch for you
+		OR
+		 git push –u origin branchName
+
+Git gui:
+	gitk
+	tig
+
+tag:
+	git tag version  commitID 
+	git push origin –tags
+		* commit f6149c658205d7ad75c355eacbcaee0cc8969256 (tag: v1.0, origin/master, 			origin/feature, origin/HEAD) 
+		| Author: jackcrazy <s.zhao.j@gmail.com> 
+		| Date:   Tue Feb 4 10:36:36 2014 -0800 
+	
+	git chekcout v1.0
+		# there is no branch for checkout tags
+		# it will show a detached head
+		# if you checkout to other branch, it will warn you to check new branch for that
+
+	git tag newTagName commitID
+
+
+
+git reflog:
+
+	
+git rebase:
+	git rebase -i HEAD^^  ( go back two commits)
+	once you pused, never rebase
