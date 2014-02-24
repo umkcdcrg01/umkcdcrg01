@@ -40,8 +40,8 @@ git staging area:
 
 
 create local directory as a remote directory:
-	git clone –bare currentDirectory  RemoteDirectory
-		ex: git clone –bare currentGItDirecoty Remote(it can be a local folder) 
+	git clone –-bare currentDirectory  RemoteDirectory
+		ex: git clone –-bare currentGItDirecoty Remote(it can be a local folder) 
 		ex: shuai@conalab:~/Documents/git$ git clone --bare work remote 
 			Cloning into bare repository 'remote'... 
 			done. 
