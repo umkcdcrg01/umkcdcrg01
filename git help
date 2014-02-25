@@ -17,6 +17,7 @@ git branch merge:
 	git merge feature ( since here, feature is head of master, do a “fast forward”, HEAD and Master label move to the position where feature is)
 	git merge master feature  ( merge master to feature)
 	git branch [-r]
+	
 git check commit log:
 	git log
 	git log --graph --decorate --all 
@@ -59,7 +60,20 @@ git remote :
 		shuai@conalab:~/Documents/git/work$ git remote -v 
 			origin	/home/shuai/Documents/git/remote/ (fetch) 
 			origin	/home/shuai/Documents/git/remote/ (push)
-	
+
+git remote -v
+	# View current remotes
+	# origin  git@github.com:user/repo.git (fetch)
+	# origin  git@github.com:user/repo.git (push)
+	# destination  git@github.com:forker/repo.git (fetch)
+	# destination  git@github.com:forker/repo.git (push)
+	git remote rm destination
+	# Remove remote
+git remote -v
+	# Verify removal
+	# origin  git@github.com:user/repo.git (fetch)
+	# origin  git@github.com:user/repo.git (push)
+		
 After you do a remote clone, there are local tracking branches created for your default branch which is MASTER branch --- origin
 each local branch will have a tracking label for it
 
