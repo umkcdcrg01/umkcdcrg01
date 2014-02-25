@@ -1,0 +1,281 @@
+virt-install --name "ubuntu-test" --vcpu 1 --cpu host --ram 2014 --os-type=linux --disk path=/var/lib/libvirt/images/precise-server-cloudimg-amd64-disk1.img,device=disk,bus=virtio --vnc --noautoconsole --force –import
+
+virt-install --name "cirros-test" --vcpu 1 --cpu host --ram 2014 --os-type=linux --disk path=/var/lib/libvirt/images/precise-server-cloudimg-amd64-disk1.img,device=disk,bus=virtio --vnc --noautoconsole --force –import
+
+
+Install ccnx
+	wget http://www.ccnx.org/releases/ccnx-0.8.1.tar.gz
+	apt-get install ant autoconf libssl-dev libexpat-dev libpcap-dev libecryptfs0 libxml2-utils automake gawk gcc g++ git-core pkg-config libpcre3-dev openjdk-6-jre-lib  openjdk-6-jdk
+
+		https://www.ccnx.org/wiki/CCNx/InstallingCCNx
+	./configure
+	make
+	make install
+
+
+Generating a KVM MAC
+If you are managing your guests via command line, the following script might be helpful to generate a randomized MAC using QEMU's registered OUI (52:54:00): 
+MACADDR="52:54:00:$(dd if=/dev/urandom bs=512 count=1 2>/dev/null | md5sum | sed 's/^\(..\)\(..\)\(..\).*$/\1:\2:\3/')"; echo $MACADDR
+libvirt networking
+	http://wiki.libvirt.org/page/Networking
+
+
+
+
+ADD FIB
+	ccndc add ccnx:/chat1 udp 192.168.1.152
+	ccndc add ccnx:/chat1 udp 192.168.1.222 
+	ccndc add ccnx:/chat1 udp 192.168.1.223  (dst ip)
+ccnchat ccnx:/chat1 
+
+	ccndc add ccnx:/openstack/icn udp 10.1.1.3
+
+	ccndstart ccnd CCND_LISTEN_ON=[10.1.1.254],[192.168.1.152] 
+
+virsh detach interface
+	 sudo virsh detach-interface 66 --type bridge --mac 52:54:00:e2:2f:31
+	sudo virsh detach-interface 65 --type bridge --mac 52:54:00:71:7d:c1
+virsh attach interface
+	sudo virsh attach-interface instance-0000007f --type bridge --source linux-br0  --model virtio --persistent
+
+
+show all the links, including virtual ethernet interfaces:
+	ip link list
+	notes: you can check the status of those interfaces
+
+bring interface/bridge/virtual infaces up
+	sudo ifconfig veth0 up
+
+add virtual interface peer  (vethxx pair)
+	 sudo ip link add name veth0 type veth peer name veth1
+
+assign virtual interface peer to linux bridge and ovs switch
+	linux bridge:
+	 	sudo brctl addbr linux-br0
+		sudo brctl addif linux-br0 veth0
+	OVS:
+		sudo ovs-vsctl add-port br-eth0 veth1 
+		
+delete virtual port
+	sudo ovs-vsctl del-port br-eth0 veth1 
+	sudo brctl delif linux-br0 veth0	
+
+steps to create VM with two NICs and attach to customized linux-bridge and ovs switch:
+	1 create vm using openstack
+	the following step (2-6) will only be used if this is the first time you configure your compute host
+2. create one OVS bridge 	ex: br-eth0
+3. create one linux bridge 	ex: linux-br0
+4. create virtual ethernet pair
+		 sudo ip link add name veth0 type veth peer name veth1	
+	       5. assign one virtual ethernet interfacet to OVS bridge and linux bridge
+	  	sudo brctl addif linux-br0 veth0
+		sudo ovs-vsctl add-port br-eth0 veth1 
+6. run $ip link list to check the status of created bridges and virtual interfaces, if they are showing DOWN, then bring them up     ex: sudo ifconfig veth0 up
+
+
+	
+7. Then $ virsh attach-interface instanceID –type bridge –source  linux-br0
+8. login to console of that domain (instanceID), do $sudo ifconfig eth1 up
+9. assgin IP address to eth1 : $sudo ifconfig eth1 192.168.1.223/24
+10. (option) assign a default gateway $ sudo route add default gw 192.168.1.86 dev eth1
+11. try to ping and see if connectino if Okay (10.20.30.1, 192.168.1.152, 192.168.1.86)
+
+
+ovs controller setup 
+	 sudo ovs-vsctl set-controller br-eth0 tcp:192.168.1.140:6633 
+
+
+
+
+
+
+
+virsh attach-interface:
+	# virsh attach-interface instance-00000080 --type bridge --source linux-br0 --target ccnnet1
+	this will add a interface ccnnet1 at your hypervisor host
+
+nova useful commands:
+	nova host-list
+	nova list –host cona-proliant-dl380-g6-comp2-4
+	nova reboot serverName
+	
+	/var/lib/nova/instances/
+	/var/lib/libvirt
+
+	nova availability-zone-list
+
+	# boot a vm
+	nova boot --flavor 2 --image 77f6868d-3cf1-4d0a-860b-909297923a76  --availability-zone nova --nic net-id=84064ca4-9e22-4385-88e5-cd4b29ea94f1 vm-modify-1-cli 
+
+# boot a vm from a specific host
+nova hypervisor-list 
++----+--------------------------------+ 
+| ID | Hypervisor hostname            | 
++----+--------------------------------+ 
+| 1  | cona-ProLiant-DL180-G6-comp-13 | 
+| 2  | cona-proliant-dl380-g6-comp2-4 | 
++----+--------------------------------+ 
+	nova boot --flavor 2 --image 78eba640-7552-4707-a8ab-f41ee7890256  --availability-zone nova:$HOSTNAME --nic net-id=84064ca4-9e22-4385-88e5-cd4b29ea94f1 ubuntu-openstack-compute-2-vm-2
+
+# list instances runing on specific compute node:	
+nova list --host cona-proliant-dl380-g6-comp2-4 
+
+instance info:
+	instanceID  -  UUID – hostname
+	virsh list: get running Vms' instanceID
+	virsh edit instanceID: 
+	nova list: get VM hostname
+
+
+steps:
+	virsh destroy instance-00000080
+	virsh undefine instance-00000080
+	virsh define libvirt.xml
+	virsh start instance-00000080
+
+
+Doesnt Work
+	So, go into nova/instances/#INSTANCE ID#/libvirt.xml
+	Make your change.
+	Now run these commands:
+(Open up the console on the VM to figure out the "XX"..)
+virsh destroy instance-000000xx (No this will not terminate or remove your instance..Don't worry)
+virsh undefine instance-000000xx 
+virsh define libvirt.xml (This will re-register your instance-000000xx) 
+virsh start instance-000000xx 
+	In OpenStack Dashboard, your VM will be POWERED OFF/SHUTDOWN. Simply do a soft reboot on it and it will re-sync.
+  
+
+example to bring another NIC for VM
+1. create a new linux bridge: linux-br0 ( ip block 10.1.1.0/24): ip for linux-br0: 10.1.1.254
+1. run $ ~/shuai/create_linux_br.sh
+2. bring up linux-br0 and assign ip on it
+1. sudo ifconfig linux-br0 up
+2. sudo ifconfig linux-br0 10.1.1.254/24
+3. do $ ip addr list to check if it is UP
+2. set up new ovs bridge: br-eth0 ( openflow controller connection)
+1. run $ ~/shuai/bringUpOVSBr-eth0.sh  ( You might need to change the host IP address)
+2. run$ sudo ovs-vsctl show to check54
+3. install CCND on each compute node
+3. nova boot --flavor 2 --image 30e8a948-17a1-4046-8b76-7f81c54ae0e2  --availability-zone nova:$HOSTNAME --nic net-id=84064ca4-9e22-4385-88e5-cd4b29ea94f1 openstack-compute-2-vm-3
+4. nova boot --flavor 2 --image 77f6868d-3cf1-4d0a-860b-909297923a76 --availability-zone nova:cona-ProLiant-DL180-G6-comp-13 --nic net-id=84064ca4-9e22-4385-88e5-cd4b29ea94f1 openstack-compute-vm-4
+			id == uuid
+	 4. virsh attach-interface instance-00000080/UUID --type bridge --source linux-br0  [--model virtio]
+	looking for logical name: ethx
+	bring up the newest attached ethx and assign IP address for it ( 10.1.1.last_number_of_hostName)
+	do # ip addr list / route -n / ip route show  on compute node
+5. ccndstart  CCND_LISTEN_ON=[IP of linux_br],[ip of ovs bridge] 
+6. add the required fib ( for now, will use python code to manage that)
+7. ccnpoke ccnx:/openstack/vm-3-b -x 360 < /tmp/junk
+8. ccnpeek -ac ccnx:/openstack/vm-3-b
+9. 
+
+
+code:
+	
+
+
+
+
+
+
+
+
+
+
+nova aggregate: (set up at controller 146)
+	nova aggregate-create aggregate-1 zone-1
+	nova aggregate-add-host aggregate-1 cona-proliant-dl380-g6-comp2-4
+
+	nova aggregate-create aggregate-2 zone-2
+	nova aggregate-add-host aggregate-2 cona-ProLiant-DL180-G6-comp-13
+
+
+	nova boot --flavor 2 --image 78eba640-7552-4707-a8ab-f41ee7890256  --availability-zone zone-1 --nic net-id=84064ca4-9e22-4385-88e5-cd4b29ea94f1 vfsr-20
+nova boot --flavor 2 --image 78eba640-7552-4707-a8ab-f41ee7890256  --availability-zone zone-2 --nic net-id=84064ca4-9e22-4385-88e5-cd4b29ea94f1 vfsr-30
+	
+
+	cona-proliant-dl380-g6-comp2-4
+	nova aggregate-remove-host aggregate-1 cona-ProLiant-DL180-G6-comp-13
+	nova aggregate-delete aggregate-1
+	
+
+
+
+example of running ccnpok/ccnpeek
+	VM-2 will publish content, VM-4 try to fetch the content
+
+
+
+	For comp2
+		ccndstart CCND_LISTEN_ON=[10.1.1.254],[192.168.1.152]
+		ccndc add ccnx:/shuai udp 10.1.1.2
+		# ccnpeek -ac ccnx:/shuai/test1
+
+	For comp13:
+		  ccndstart CCND_LISTEN_ON=[10.1.1.254],[192.168.1.136]
+		  ccndc add ccnx:/shuai udp 192.168.1.152 
+		  # ccnpeek -ac ccnx:/shuai/test1
+	
+
+	For VM -2:
+		 ccndstart 
+ 		 ccndc add ccnx:/ udp 10.1.1.254 
+ 		ccnpoke ccnx:/shuai/test1  < /tmp/junk 
+ 		vi /tmp/junk2 
+ 		ccnpoke ccnx:/shuai/files/test2  < /tmp/junk
+
+	Run poke on VM-2
+		 ccndstart 
+ 		ccndc add ccnx:/ udp 10.1.1.254 
+ 		ccnpeek -ac ccnx:/shuai/test1 
+ 		ccnpeek -ac ccnx:/shuai/files/test2
+
+
+
+
+
+
+
+
+openflow controller:
+	make changes: cona@cona-proliant-1-ctrl:~/Controller/floodlight$ vi /home/cona/Controller/floodlight/src/main/java/net/floodlightcontroller/ccnchatmanager/CCNChatManager.java 
+	re-compile: cona@cona-proliant-1-ctrl:~/Controller/floodlight$ make all
+	run: sudo java -jar ~/Controller/floodlight/target/floodlight.jar
+
+
+pyccn
+	https://github.com/named-data/PyCCN
+	http://ndn.ucla.edu/projects-and-code/frameworks/pyccn/
+	git clone git@github.com:named-data/PyCCN.git 
+	
+	cd PyCCN
+	./mkdir build-aux
+	autoconfig -i 
+	./configure
+	sudo make
+	sudo make install
+	then test “ import pyccn”
+	
+
+install CCNx
+	http://www.ccnx.org/
+	download ccnx 
+	 tar zxvf ccnx-0.8.1.tar.gz 
+	sudo apt-get update
+	 sudo apt-get install libecryptfs0 expat libpcap-dev libxml2 ant openjdk-6-jdk libssl-dev libexpat1-dev gawk autoconf gcc g++ git-core pkg-config
+	cd ccnx-0.9.1
+	./configure
+	sudo make 
+	sudo make install 
+	
+
+
+awk: find vm's name and UUID by Nova
+	nova list --host $HOSTNAME | awk 'NR>3 && NR<NF {print $2, $4}'
+
+vi:  How do I insert text at beginning of a multi-line selection in vi/Vim
+
+1. go to the first line, press Ctrl-v to enter visual block mode
+2. press down button to the last line
+3. press Shift-i to insert at the beginning (of the block). When you are finished and press Esc, the inserted characters will be added to each line at the left of the marked block.
