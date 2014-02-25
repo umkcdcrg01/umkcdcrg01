@@ -18,6 +18,15 @@ git branch merge:
 	git merge master feature  ( merge master to feature)
 	git branch [-r]
 	
+delete local branch
+	$ git branch -D bugfix
+	Deleted branch bugfix (was 2a14ef7)
+
+delete a remote branch (from remtoe repo)
+	git push origin :<branchName>
+	OR
+	git push origin --delete <branchName>
+	
 git check commit log:
 	git log
 	git log --graph --decorate --all 
@@ -36,25 +45,19 @@ git ID:
 	Git Commit ID is a checksum of ( content + author + date + log + previous commit ID )
 	Every ID is unique, every commit is unique, commits never change, 
 
-git staging area:
-
-
-
 create local directory as a remote directory:
-	git clone –-bare currentDirectory  RemoteDirectory
-		ex: git clone –-bare currentGItDirecoty Remote(it can be a local folder) 
+	git clone --bare currentDirectory  RemoteDirectory
+		ex: git clone --bare currentGItDirecoty Remote(it can be a local folder) 
 		ex: shuai@conalab:~/Documents/git$ git clone --bare work remote 
 			Cloning into bare repository 'remote'... 
 			done. 
 
 		$ tree  Remote
 
-
 git remote :
 	clone, pull, fetch, push,  pull = fetch + merge
-	(Locally) branch newbranch → checkout newbranch → edit → test → add → commit → pull origin master → test → push origin master	
-
-
+	(Locally) branch newbranch → checkout 
+		newbranch → edit → test → add → commit → pull origin master → test → push origin master	
 	git clone  Remote yourlocaldirecotry   ( remote can be local or URL directory)
 	git remote -v
 		shuai@conalab:~/Documents/git/work$ git remote -v 
@@ -67,14 +70,17 @@ git remote -v
 	# origin  git@github.com:user/repo.git (push)
 	# destination  git@github.com:forker/repo.git (fetch)
 	# destination  git@github.com:forker/repo.git (push)
-	git remote rm destination
+
+git remote rm destination
 	# Remove remote
+
 git remote -v
 	# Verify removal
 	# origin  git@github.com:user/repo.git (fetch)
 	# origin  git@github.com:user/repo.git (push)
 		
-After you do a remote clone, there are local tracking branches created for your default branch which is MASTER branch --- origin
+After you do a remote clone, there are local tracking branches created 
+for your default branch which is MASTER branch --- origin
 each local branch will have a tracking label for it
 
 	1. origin/branchName: you are referring to your local repo
@@ -104,11 +110,6 @@ tag:
 
 	git tag newTagName commitID
 
-
-
-git reflog:
-
-	
 git rebase:
 	git rebase -i HEAD^^  ( go back two commits)
 	once you pused, never rebase
