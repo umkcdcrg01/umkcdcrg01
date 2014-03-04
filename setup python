@@ -1,0 +1,6 @@
+sudo apt-get install python-setuptools
+sudo apt-get install python-pip
+
+Then use easy_install or pip to install python modules
+sudo easy_install flask/psycopg2
+...
