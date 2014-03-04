@@ -158,3 +158,34 @@ tag:
 git rebase:
 	git rebase -i HEAD^^  ( go back two commits)
 	once you pused, never rebase
+	
+Adding a remote
+	
+	To add a new remote, use the git remote add command:
+	
+	git remote add origin https://github.com/user/repo.git
+	# Set a new remote
+	
+	git remote -v
+	# Verify new remote
+	# origin  https://github.com/user/repo.git (fetch)
+	# origin  https://github.com/user/repo.git (push)
+	
+	The command takes two arguments:
+	
+	    remote name: origin
+	    repository URL: https://github.com/user/repo.git
+	
+	Not sure which URL to use? Check out this guide
+	Tracking branch
+	
+	You can also create a tracking branch as you create the remote:
+	
+	git remote add --track master origin  https://github.com/user/repo.git
+	
+	This is useful if, when you have the master branch checked out,
+	you want git pull to work without needing to do git pull origin master.
+	
+	Please note, checking out a local branch from a remote branch automatically
+	creates what is called a tracking branch. Also, when you clone a repository, 
+	it generally automatically creates a master branch that tracks origin/master.
