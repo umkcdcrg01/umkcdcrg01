@@ -1,0 +1,71 @@
+A simple way to create git repository on a server machine connecting via ssh
+
+Let’s assume following situation:
+
+    We have a folder ˜/workshop , that contains the project on a local machine
+    Our project folder workshop is not a git repository yet
+    We want to have a server that hosts the workshop project and new developer can get the repository using a ‘git clone …’ command
+    On server site, the new repository should be located unter ˜/gitrepos/workshop.git.
+
+To simplify the following steps i will use the machine localhost as the server machine.
+Create a working copy repository
+
+First, create a new local git repository and add all files within this folder.
+
+cd ˜/workshop
+git init
+git add .
+git commit -m "initial repository creation"
+
+Create the bare repository
+
+Then we have to create a bare repository on the server side. Let’s assume the user ralfwehner is the repository admin user on server side. For this step i will show two alternative ways:
+a) We clone the server’s repositiory on the client machine and copy it via scp up to the server:
+
+git clone --bare .git ../workshop.git
+scp -r ../workshop.git ralfwehner@localhost:/Users/ralfwehner/gitrepos/workspace.git
+
+b) We create a new empty repository on the server side and copy the developer’s repository from client machine to server (recommended when using difference git versions on server and clients):
+So, first create the bare repository on server side:
+
+sudo -u ralfwehner mkdir -m 770 /Users/ralfwehner/gitrepos/workshop.git
+cd /Users/ralfwehner/gitrepos/workshop.git
+sudo -u ralfwehner git --bare init --shared=group
+
+From client side the developer’s project must be pushed into the new bare server repository:
+
+git remote add origin ssh://ralfwehner@dev-server/Users/ralfwehner/gitrepos/workshop.git
+git push origin master
+
+That’s it. The project ‘workshop’ is now available on the server and can be cloned using the git clone command. E.g.:
+
+cd /tmp/
+git clone ralfwehner@localhost:/Users/ralfwehner/gitrepos/workshop.git myclonedworkshop
+
+Synconize local and server repositories
+Push developers repository to server
+
+To synchronize the changes checked in into the local developer’s project to the server repository:
+
+git push
+
+Pull or merge the server repository into developer’s one
+
+This command synchronizes the server’s repository to the local developer’s one. By this step changes made from other developers that pushed their stuff up to the server will be merged into the local repository.
+
+git pull . remotes/origin/master
+
+Checkout a project from server
+
+In git terminology the checkout of a projekt can be understood as a clone of a git repository from a server to the developer’s local machine. You can do this simply by:
+
+mkdir myNewWorkspace && cd myNewWorkspace
+git clone ssh://localhost/Users/ralfwehner/gitrepos/workshop.git
+
+The new created project can be pushed and pulled with:
+
+cd workshop
+... do you changes...
+git push
+... merge changes made from other users...
+git pull
